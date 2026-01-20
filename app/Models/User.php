@@ -8,7 +8,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-
+// use Spatie\Multitenancy\Models\Concerns\UsesTenantConnection; // If using multiple DBs, but we use one
+use App\Models\Concerns\BelongsToTenant; // We will create this next
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -19,11 +20,9 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+    // Use this to automatically scope queries to the current tenant
+    use \Spatie\Multitenancy\Models\Concerns\BelongsToTenant;
+    protected $fillable = ["name", "tenant_id", "email", "password"];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -31,10 +30,10 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $hidden = [
-        'password',
-        'two_factor_secret',
-        'two_factor_recovery_codes',
-        'remember_token',
+        "password",
+        "two_factor_secret",
+        "two_factor_recovery_codes",
+        "remember_token",
     ];
 
     /**
@@ -45,8 +44,8 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            "email_verified_at" => "datetime",
+            "password" => "hashed",
         ];
     }
 
@@ -56,9 +55,9 @@ class User extends Authenticatable
     public function initials(): string
     {
         return Str::of($this->name)
-            ->explode(' ')
+            ->explode(" ")
             ->take(2)
-            ->map(fn ($word) => Str::substr($word, 0, 1))
-            ->implode('');
+            ->map(fn($word) => Str::substr($word, 0, 1))
+            ->implode("");
     }
 }
